@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🇮🇳 India Live Budget • Neon Hacker Clock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#050708;          /* deep black-blue */
+      --panel:#0b0f10;       /* card surface */
+      --text:#d7ffe2;        /* pale mint */
+      --muted:#78ffb7;       /* soft neon */
+      --accent:#39ff14;      /* neon green */
+      --accent-2:#00eaff;    /* neon cyan */
+      --accent-3:#ff3cf7;    /* neon magenta */
+      --bad:#ff6b6b;         /* warning */
+      --good:#7dfc00;        /* good */
+      --shadow:0 0 10px rgba(57,255,20,.35),0 0 30px rgba(0,234,255,.15);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:radial-gradient(1200px 800px at 70% -10%, rgba(0,234,255,.06), transparent 60%),
+      radial-gradient(800px 600px at -10% 110%, rgba(255,60,247,.08), transparent 60%), var(--bg);
+      color:var(--text); font-family:"Share Tech Mono", monospace; letter-spacing:.3px;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      background:linear-gradient(180deg, rgba(0,0,0,.85), rgba(0,0,0,.35));
+      border-bottom:1px solid rgba(57,255,20,.2);
+      box-shadow:var(--shadow);
+      padding:12px clamp(12px, 2vw, 24px);
+    }
+    .header-content{
+      display:flex; gap:16px; align-items:center; flex-wrap:wrap;
+    }
+    .flag-logo{
+      display:flex; align-items:center;
+    }
+    .title{
+      font-size:clamp(16px, 2.4vw, 28px);
+      text-shadow:0 0 6px rgba(57,255,20,.75), 0 0 30px rgba(0,234,255,.35);
+      line-height:1.05; margin-right:auto; font-weight:600;
+    }
+    .creator-info{
+      font-size:clamp(8px, 1.2vw, 11px); color:var(--muted); 
+      text-shadow:0 0 4px rgba(120,255,183,.4); letter-spacing:0.5px;
+      margin-left:-1px; opacity:0.85;
+    }
+    .datetime{
+      font-size:clamp(9px, 1.3vw, 12px); color:var(--accent-2);
+      text-shadow:0 0 6px rgba(0,234,255,.6); letter-spacing:0.8px;
+      margin-top:2px; font-weight:500;
+    }
+    .badge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px dashed rgba(0,234,255,.45); border-radius:10px; box-shadow:inset 0 0 12px rgba(0,234,255,.12); opacity:.9}
+    .controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .btn{cursor:pointer; border:1px solid rgba(57,255,20,.35); background:#07110a; color:var(--text); padding:8px 12px; border-radius:10px; box-shadow:var(--shadow); font-size:14px}
+    .btn:active{transform:translateY(1px)}
+    .slider{accent-color:var(--accent); width:160px}
+
+    .grid{
+      width:100%;
+      padding:8px clamp(6px, 1.5vw, 12px) 16px;
+      display:block;
+      max-width:1400px; margin:0 auto;
+    }
+    .section-row{
+      display:grid; gap:4px; margin-bottom:4px;
+      grid-template-columns:repeat(8, 1fr);
+    }
+
+    .panel{
+      background:linear-gradient(180deg, rgba(10,15,16,.95), rgba(10,15,16,.75));
+      border:1px solid rgba(120,255,183,.25);
+      border-radius:6px; box-shadow:var(--shadow);
+      position:relative; overflow:hidden;
+      min-height:60px;
+    }
+    .panel::after{ /* scanline */
+      content:""; position:absolute; inset:0;
+      background:repeating-linear-gradient(transparent 0 2px, rgba(255,255,255,.02) 2px 4px);
+      mix-blend-mode:soft-light; pointer-events:none;
+    }
+    .panel h3{margin:0; padding:4px 6px; font-size:8px; color:var(--muted); letter-spacing:.3px; text-transform:uppercase; border-bottom:1px dashed rgba(120,255,183,.22)}
+    .value{padding:4px 6px; display:flex; flex-wrap:wrap; gap:2px; align-items:baseline}
+    .num{font-size:clamp(10px, 1.4vw, 12px); text-shadow:0 0 4px rgba(57,255,20,.65); font-weight:600}
+    .num.good{color:var(--good); text-shadow:0 0 8px rgba(125,252,0,.65)}
+    .num.neutral{color:var(--accent-2); text-shadow:0 0 8px rgba(0,234,255,.65)}
+    .num.warning{color:#ffb347; text-shadow:0 0 8px rgba(255,179,71,.65)}
+    .num.alert{color:var(--bad); text-shadow:0 0 8px rgba(255,107,107,.65)}
+    .unit{opacity:.8; font-size:11px}
+    .delta{margin-left:auto; font-size:10px; padding:2px 6px; border-radius:999px; background:rgba(0,234,255,.12); border:1px solid rgba(0,234,255,.35)}
+
+    .tagbar{display:flex; flex-wrap:wrap; gap:3px; padding:0 6px 6px}
+    .tag{font-size:9px; padding:1px 4px; border-radius:4px; border:1px solid rgba(57,255,20,.25); background:rgba(57,255,20,.06)}
+
+    .row-span-2{grid-row:span 2}
+    .col-span-2{grid-column:span 2}
+
+    .cat{
+      grid-column:1/-1; margin:4px 0 4px 0; color:var(--accent-2);
+      text-shadow:0 0 8px rgba(0,234,255,.6); letter-spacing:1px; font-size:clamp(11px, 1.1vw, 13px);
+      border-left:2px solid rgba(0,234,255,.5); padding:3px 0 3px 8px;
+      text-transform:uppercase; font-weight:600;
+    }
+
+    footer{
+      position:fixed; right:14px; bottom:12px; opacity:.85; font-size:11px; color:#9afcb8;
+      text-align:right; line-height:1.3;
+    }
+    .footer-line{
+      display:block; margin-bottom:2px;
+    }
+
+    @media (max-width:767px){
+      .section-row{grid-template-columns:repeat(4, 1fr)}
+      .panel{min-height:50px}
+      .panel h3{font-size:7px; padding:2px 4px}
+      .value{padding:2px 4px}
+      .num{font-size:clamp(8px, 2vw, 10px)}
+      .tagbar{display:none} /* Hide tags on mobile to save space */
+    }
+    @media (min-width:768px){
+      .section-row{grid-template-columns:repeat(6, 1fr)}
+    }
+    @media (min-width:1200px){
+      .section-row{grid-template-columns:repeat(8, 1fr)}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="flag-logo">
+        <svg width="40" height="28" viewBox="0 0 40 28" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="9.33" fill="#FF9933"/>
+          <rect y="9.33" width="40" height="9.34" fill="#FFFFFF"/>
+          <rect y="18.67" width="40" height="9.33" fill="#138808"/>
+          <circle cx="20" cy="14" r="3.5" fill="none" stroke="#000080" stroke-width="0.5"/>
+          <g transform="translate(20,14)">
+            <circle r="0.3" fill="#000080"/>
+            <g stroke="#000080" stroke-width="0.15" fill="none">
+              <path d="M0,-2.5 L0,2.5 M-2.5,0 L2.5,0"/>
+              <path d="M-1.77,-1.77 L1.77,1.77 M-1.77,1.77 L1.77,-1.77"/>
+              <circle r="1.5"/>
+              <circle r="2.5"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="title">INDIA LIVE BUDGET CLOCK</div>
+      <div class="creator-info">Created by Sachida Nand Sharma | www.webulity.com</div>
+      <div class="datetime" id="datetime">Loading time...</div>
+      <div class="controls">
+        <button class="btn" id="toggle">⏸ Pause</button>
+        <label>Speed <input class="slider" id="speed" type="range" min="0" max="400" value="100"></label>
+        <button class="btn" id="reset">♻︎ Reset</button>
+        <button class="btn" id="audio-toggle">🔊 Audio</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid" id="grid">
+    <!-- Sections will be organized in rows like US Debt Clock -->
+    <div class="section-row" id="economy-section">
+      <div class="cat">ECONOMY & BUDGET</div>
+    </div>
+    
+    <div class="section-row" id="population-section">
+      <div class="cat">POPULATION & DEMOGRAPHICS</div>
+    </div>
+    
+    <div class="section-row" id="jobs-section">
+      <div class="cat">JOBS & INCOME</div>
+    </div>
+    
+    <div class="section-row" id="resources-section">
+      <div class="cat">FOOD, RESOURCES & RATION</div>
+    </div>
+    
+    <div class="section-row" id="health-section">
+      <div class="cat">HEALTH & WELFARE</div>
+    </div>
+    
+    <div class="section-row" id="education-section">
+      <div class="cat">EDUCATION</div>
+    </div>
+    
+    <div class="section-row" id="infrastructure-section">
+      <div class="cat">INFRASTRUCTURE & DEVELOPMENT</div>
+    </div>
+    
+    <div class="section-row" id="environment-section">
+      <div class="cat">ENVIRONMENT & CLIMATE</div>
+    </div>
+    
+    <div class="section-row" id="safety-section">
+      <div class="cat">LAW, SAFETY & CRIME</div>
+    </div>
+    
+    <div class="section-row" id="state-section">
+      <div class="cat">STATE SNAPSHOT</div>
+    </div>
+  </main>
+
+  <footer>
+    <span class="footer-line">Prototype Numbers - Live Demo</span>
+    <span class="footer-line">Contact for Web Development</span>
+    <span class="footer-line"><strong>Webulity.com</strong></span>
+  </footer>
+
+  <script>
+    /*
+     * GITHUB PAGES DEPLOYMENT READY
+     * 1) Fork this repository or create a new one
+     * 2) Enable GitHub Pages in repository settings
+     * 3) Numbers will animate with realistic but simulated rates
+     * 4) To customize, edit the METRICS array below: label, unit, start, perSec, format
+     * 5) Later, replace generators with real API values and set perSec = 0 for static figures
+     */
+
+    const rupee = new Intl.NumberFormat('en-IN', {maximumFractionDigits:0});
+    const comma = new Intl.NumberFormat('en-IN', {maximumFractionDigits:0});
+    const dec2  = new Intl.NumberFormat('en-IN', {maximumFractionDigits:2});
+
+    // Helper formatters - Full numbers as requested
+    const fmtRs    = v => '₹' + comma.format(Math.round(v));
+    const fmtLakh  = v => '₹' + comma.format(Math.round(v));
+    const fmtCr    = v => '₹' + comma.format(Math.round(v));
+    const fmtNum   = v => comma.format(Math.round(v));
+    const fmtPct   = v => dec2.format(v) + '%';
+
+    // Metric schema entries drive both UI and live math.
+    // id: unique key; cat: category title text present in DOM to place below it.
+    const METRICS = [
+      // ECONOMY & BUDGET
+      {id:'spend_total',     label:'Govt Spending',             unit:'',   start: 4.2e7,  perSec:  2800,  cat:'ECONOMY & BUDGET', fmt:fmtRs, tags:['Union'], colorType:'neutral'},
+      {id:'revenue_total',   label:'Govt Revenue',              unit:'',   start: 3.6e7,  perSec:  2400,  cat:'ECONOMY & BUDGET', fmt:fmtRs, tags:['Tax'], colorType:'good'},
+      {id:'deficit',         label:'Budget Deficit',            unit:'',   start: 6.0e6,  perSec:   400,  cat:'ECONOMY & BUDGET', fmt:fmtRs, tags:['Gap'], colorType:'alert'},
+      {id:'debt_total',      label:'National Debt',             unit:'',   start: 1.7e8,  perSec:  3200,  cat:'ECONOMY & BUDGET', fmt:fmtRs, tags:['Debt'], colorType:'warning'},
+      {id:'gdp_nom',         label:'GDP',                       unit:'',   start: 2.9e8,  perSec:   920,  cat:'ECONOMY & BUDGET', fmt:fmtRs, tags:['Output'], colorType:'good'},
+      {id:'inflation',       label:'Inflation',                 unit:'%',  start: 5.1,    perSec:  0.0001, cat:'ECONOMY & BUDGET', fmt:fmtPct, tags:['CPI'], colorType:'warning'},
+      {id:'forex',           label:'FX Reserves',               unit:'',   start: 3.8e7,  perSec:   32,   cat:'ECONOMY & BUDGET', fmt:fmtRs, tags:['USD'], colorType:'good'},
+      {id:'exports',         label:'Exports Annual',            unit:'',   start: 1.9e7,  perSec:   600,  cat:'ECONOMY & BUDGET', fmt:fmtRs, tags:['Trade'], colorType:'good'},
+
+      // POPULATION & DEMOGRAPHICS
+      {id:'population',      label:'Population',                unit:'',   start: 1.431e9, perSec:  2.8,   cat:'POPULATION & DEMOGRAPHICS', fmt:fmtNum, tags:['Live'], colorType:'neutral'},
+      {id:'births_today',    label:'Births Today',              unit:'',   start: 0,      perSec:  42,    cat:'POPULATION & DEMOGRAPHICS', fmt:fmtNum, tags:['Birth'], colorType:'good'},
+      {id:'deaths_today',    label:'Deaths Today',              unit:'',   start: 0,      perSec:  32,    cat:'POPULATION & DEMOGRAPHICS', fmt:fmtNum, tags:['Death'], colorType:'neutral'},
+      {id:'urban_pop',       label:'Urban Population',          unit:'',   start: 460e6,  perSec:  1.5,   cat:'POPULATION & DEMOGRAPHICS', fmt:fmtNum, tags:['City'], colorType:'neutral'},
+      {id:'rural_pop',       label:'Rural Population',          unit:'',   start: 971e6,  perSec:  1.3,   cat:'POPULATION & DEMOGRAPHICS', fmt:fmtNum, tags:['Village'], colorType:'neutral'},
+      {id:'literacy_rate',   label:'Literacy Rate',             unit:'%',  start: 77.7,   perSec:  0.0001, cat:'POPULATION & DEMOGRAPHICS', fmt:fmtPct, tags:['Education'], colorType:'good'},
+      {id:'life_expect',     label:'Life Expectancy',           unit:'',   start: 69.7,   perSec:  0.00001, cat:'POPULATION & DEMOGRAPHICS', fmt:v=>dec2.format(v)+' yrs', tags:['Health'], colorType:'good'},
+      {id:'median_age',      label:'Median Age',                unit:'',   start: 28.2,   perSec:  0.00002, cat:'POPULATION & DEMOGRAPHICS', fmt:v=>dec2.format(v)+' yrs', tags:['Demo'], colorType:'neutral'},
+
+      // JOBS & INCOME
+      {id:'employed',        label:'Employed',                  unit:'',   start: 520e6,  perSec:  35,    cat:'JOBS & INCOME', fmt:fmtNum, tags:['Work'], colorType:'good'},
+      {id:'unemployed',      label:'Unemployed',                unit:'',   start: 30e6,   perSec:  -1,    cat:'JOBS & INCOME', fmt:fmtNum, tags:['Jobless'], colorType:'warning'},
+      {id:'unemp_rate',      label:'Unemployment Rate',         unit:'%',  start: 6.8,    perSec:  -0.00002, cat:'JOBS & INCOME', fmt:fmtPct, tags:['Rate'], colorType:'warning'},
+      {id:'pci',             label:'Per Capita Income',         unit:'',   start: 172000, perSec:  0.15,   cat:'JOBS & INCOME', fmt:fmtRs, tags:['Annual'], colorType:'good'},
+      {id:'poverty_rate',    label:'Poverty Rate',              unit:'%',  start: 11.2,   perSec: -0.0001, cat:'JOBS & INCOME', fmt:fmtPct, tags:['SDG'], colorType:'warning'},
+      {id:'min_wage',        label:'Minimum Wage',              unit:'',   start: 176,    perSec:  0.001,  cat:'JOBS & INCOME', fmt:fmtRs, tags:['Daily'], colorType:'neutral'},
+      {id:'jobs_created',    label:'Jobs Created Today',        unit:'',   start: 0,      perSec:  85,     cat:'JOBS & INCOME', fmt:fmtNum, tags:['New'], colorType:'good'},
+      {id:'gini_index',      label:'Income Inequality',         unit:'',   start: 35.7,   perSec:  0.00001, cat:'JOBS & INCOME', fmt:v=>dec2.format(v), tags:['Gini'], colorType:'warning'},
+
+      // FOOD & RESOURCES
+      {id:'grain_stock',     label:'Grain Stock',               unit:'MT', start: 50e6,   perSec:  4,     cat:'FOOD, RESOURCES & RATION', fmt:fmtNum, tags:['FCI'], colorType:'good'},
+      {id:'ration_cards',    label:'Ration Beneficiaries',      unit:'',   start: 810e6,  perSec:  0.8,   cat:'FOOD, RESOURCES & RATION', fmt:fmtNum, tags:['NFSA'], colorType:'neutral'},
+      {id:'food_subsidy',    label:'Food Subsidy Annual',       unit:'',   start: 2.1e6,  perSec:  15,    cat:'FOOD, RESOURCES & RATION', fmt:fmtRs, tags:['Support'], colorType:'neutral'},
+      {id:'grain_prod',      label:'Grain Production',          unit:'MT', start: 315e6,  perSec:  2,     cat:'FOOD, RESOURCES & RATION', fmt:fmtNum, tags:['Harvest'], colorType:'good'},
+      {id:'water_access',    label:'Safe Water Access',         unit:'%',  start: 93.1,   perSec:  0.0001, cat:'FOOD, RESOURCES & RATION', fmt:fmtPct, tags:['Clean'], colorType:'good'},
+      {id:'malnutrition',    label:'Child Malnutrition',        unit:'%',  start: 35.5,   perSec: -0.0002, cat:'FOOD, RESOURCES & RATION', fmt:fmtPct, tags:['Health'], colorType:'alert'},
+      {id:'food_waste',      label:'Food Wastage MT',           unit:'MT', start: 67e6,   perSec:  1.2,   cat:'FOOD, RESOURCES & RATION', fmt:fmtNum, tags:['Loss'], colorType:'alert'},
+      {id:'fertilizer',      label:'Fertilizer Consumption',    unit:'MT', start: 55e6,   perSec:  0.8,   cat:'FOOD, RESOURCES & RATION', fmt:fmtNum, tags:['Agri'], colorType:'neutral'},
+
+      // HEALTH & WELFARE
+      {id:'health_spend',    label:'Healthcare Spending',       unit:'',   start: 3.2e6,  perSec:  48,    cat:'HEALTH & WELFARE', fmt:fmtRs, tags:['Budget'], colorType:'neutral'},
+      {id:'vacc_today',      label:'Vaccinations Today',        unit:'',   start: 0,      perSec:  95,    cat:'HEALTH & WELFARE', fmt:fmtNum, tags:['Dose'], colorType:'good'},
+      {id:'hospitals',       label:'Hospitals Count',           unit:'',   start: 69855,  perSec:  0.1,   cat:'HEALTH & WELFARE', fmt:fmtNum, tags:['Care'], colorType:'neutral'},
+      {id:'doctors',         label:'Doctors Registered',        unit:'',   start: 1.3e6,  perSec:  8,     cat:'HEALTH & WELFARE', fmt:fmtNum, tags:['Medical'], colorType:'good'},
+      {id:'infant_mort',     label:'Infant Mortality Rate',     unit:'',   start: 30,     perSec: -0.001, cat:'HEALTH & WELFARE', fmt:v=>dec2.format(v)+'/1K', tags:['Child'], colorType:'warning'},
+      {id:'maternal_mort',   label:'Maternal Mortality',        unit:'',   start: 103,    perSec: -0.002, cat:'HEALTH & WELFARE', fmt:v=>fmtNum(v)+'/1L', tags:['Mother'], colorType:'warning'},
+      {id:'hospital_beds',   label:'Hospital Beds',             unit:'',   start: 1.9e6,  perSec:  5,     cat:'HEALTH & WELFARE', fmt:fmtNum, tags:['Capacity'], colorType:'neutral'},
+      {id:'health_insurance',label:'Health Insurance Coverage', unit:'%',  start: 64.2,   perSec:  0.0002, cat:'HEALTH & WELFARE', fmt:fmtPct, tags:['Cover'], colorType:'good'},
+
+      // EDUCATION
+      {id:'edu_budget',      label:'Education Budget',          unit:'',   start: 4.2e6,  perSec:  68,    cat:'EDUCATION', fmt:fmtRs, tags:['Spend'], colorType:'neutral'},
+      {id:'students',        label:'Students K-12',             unit:'',   start: 260e6,  perSec:  4,     cat:'EDUCATION', fmt:fmtNum, tags:['School'], colorType:'good'},
+      {id:'schools',         label:'Schools Total',             unit:'',   start: 1.5e6,  perSec:  2,     cat:'EDUCATION', fmt:fmtNum, tags:['Instit'], colorType:'neutral'},
+      {id:'teachers',        label:'Teachers Employed',         unit:'',   start: 9.7e6,  perSec:  12,    cat:'EDUCATION', fmt:fmtNum, tags:['Staff'], colorType:'good'},
+      {id:'higher_edu',      label:'Higher Education',          unit:'',   start: 38.5e6, perSec:  15,    cat:'EDUCATION', fmt:fmtNum, tags:['College'], colorType:'good'},
+      {id:'dropouts',        label:'School Dropouts',           unit:'%',  start: 17.5,   perSec: -0.0001, cat:'EDUCATION', fmt:fmtPct, tags:['Loss'], colorType:'alert'},
+      {id:'skill_training',  label:'Skill Training Enrolled',   unit:'',   start: 12e6,   perSec:  25,    cat:'EDUCATION', fmt:fmtNum, tags:['Skill'], colorType:'good'},
+      {id:'digital_lit',     label:'Digital Literacy',          unit:'%',  start: 38.0,   perSec:  0.0003, cat:'EDUCATION', fmt:fmtPct, tags:['Tech'], colorType:'warning'},
+
+      // INFRASTRUCTURE
+      {id:'roads_total',     label:'Total Roads',               unit:'km', start: 6.4e6,  perSec:  1.2,   cat:'INFRASTRUCTURE & DEVELOPMENT', fmt:fmtNum, tags:['Network'], colorType:'good'},
+      {id:'roads_built',     label:'Roads Built YTD',           unit:'km', start: 0,      perSec:  0.7,   cat:'INFRASTRUCTURE & DEVELOPMENT', fmt:fmtNum, tags:['New'], colorType:'good'},
+      {id:'rail_network',    label:'Railway Network',           unit:'km', start: 67956,  perSec:  0.3,   cat:'INFRASTRUCTURE & DEVELOPMENT', fmt:fmtNum, tags:['Rail'], colorType:'neutral'},
+      {id:'airports',        label:'Airports Operational',      unit:'',   start: 487,    perSec:  0.02,  cat:'INFRASTRUCTURE & DEVELOPMENT', fmt:fmtNum, tags:['Air'], colorType:'neutral'},
+      {id:'electricity',     label:'Electricity Generation',    unit:'MW', start: 405e3,  perSec:  15,    cat:'INFRASTRUCTURE & DEVELOPMENT', fmt:fmtNum, tags:['Power'], colorType:'good'},
+      {id:'renewable',       label:'Renewable Capacity',        unit:'MW', start: 175e3,  perSec:  12,    cat:'INFRASTRUCTURE & DEVELOPMENT', fmt:fmtNum, tags:['Clean'], colorType:'good'},
+      {id:'broadband',       label:'Broadband Connections',     unit:'',   start: 825e6,  perSec:  45,    cat:'INFRASTRUCTURE & DEVELOPMENT', fmt:fmtNum, tags:['Internet'], colorType:'good'},
+      {id:'mobile_users',    label:'Mobile Subscribers',        unit:'',   start: 1.17e9, perSec:  25,    cat:'INFRASTRUCTURE & DEVELOPMENT', fmt:fmtNum, tags:['Telecom'], colorType:'good'},
+
+      // ENVIRONMENT
+      {id:'forest_cover',    label:'Forest Cover',              unit:'%',  start: 21.71,  perSec:  0.00001, cat:'ENVIRONMENT & CLIMATE', fmt:fmtPct, tags:['Green'], colorType:'good'},
+      {id:'aqi_delhi',       label:'Delhi AQI',                 unit:'',   start: 178,    perSec: (Math.random()-.5)*.3, cat:'ENVIRONMENT & CLIMATE', fmt:fmtNum, tags:['Air'], colorType:'alert'},
+      {id:'co2_emissions',   label:'CO₂ Emissions Annual',      unit:'MT', start: 2650e6, perSec: 2.1,    cat:'ENVIRONMENT & CLIMATE', fmt:fmtNum, tags:['Carbon'], colorType:'alert'},
+      {id:'renewable_share', label:'Renewable Energy Share',    unit:'%',  start: 42.5,   perSec:  0.0002, cat:'ENVIRONMENT & CLIMATE', fmt:fmtPct, tags:['Clean'], colorType:'good'},
+      {id:'water_pollution', label:'Water Pollution Index',     unit:'',   start: 44.6,   perSec:  0.001,  cat:'ENVIRONMENT & CLIMATE', fmt:v=>dec2.format(v), tags:['Water'], colorType:'warning'},
+      {id:'waste_generated', label:'Waste Generated Daily',     unit:'MT', start: 150000, perSec:  1.8,   cat:'ENVIRONMENT & CLIMATE', fmt:fmtNum, tags:['Trash'], colorType:'warning'},
+      {id:'recycling_rate',  label:'Recycling Rate',            unit:'%',  start: 15.2,   perSec:  0.0001, cat:'ENVIRONMENT & CLIMATE', fmt:fmtPct, tags:['Reuse'], colorType:'warning'},
+      {id:'solar_capacity',  label:'Solar Capacity',            unit:'MW', start: 67e3,   perSec:  8,     cat:'ENVIRONMENT & CLIMATE', fmt:fmtNum, tags:['Solar'], colorType:'good'},
+
+      // LAW & SAFETY
+      {id:'police_force',    label:'Police Personnel',          unit:'',   start: 2.1e6,  perSec:  3,     cat:'LAW, SAFETY & CRIME', fmt:fmtNum, tags:['Force'], colorType:'neutral'},
+      {id:'crime_rate',      label:'Crime Rate',                unit:'',   start: 385.5,  perSec:  0.02,  cat:'LAW, SAFETY & CRIME', fmt:v=>dec2.format(v)+'/1L', tags:['Safety'], colorType:'warning'},
+      {id:'crimes_today',    label:'Crimes Today',              unit:'',   start: 0,      perSec:  16,    cat:'LAW, SAFETY & CRIME', fmt:fmtNum, tags:['Report'], colorType:'warning'},
+      {id:'road_accidents',  label:'Road Accidents Today',      unit:'',   start: 0,      perSec:  5,     cat:'LAW, SAFETY & CRIME', fmt:fmtNum, tags:['Traffic'], colorType:'alert'},
+      {id:'pending_cases',   label:'Pending Court Cases',       unit:'',   start: 4.7e7,  perSec:  85,    cat:'LAW, SAFETY & CRIME', fmt:fmtNum, tags:['Court'], colorType:'warning'},
+      {id:'cyber_crimes',    label:'Cyber Crimes Annual',       unit:'',   start: 65893,  perSec:  0.2,   cat:'LAW, SAFETY & CRIME', fmt:fmtNum, tags:['Digital'], colorType:'alert'},
+      {id:'women_safety',    label:'Women Safety Index',        unit:'',   start: 56.1,   perSec:  0.0001, cat:'LAW, SAFETY & CRIME', fmt:v=>dec2.format(v), tags:['Women'], colorType:'warning'},
+      {id:'fire_incidents',  label:'Fire Incidents Today',      unit:'',   start: 0,      perSec:  0.8,   cat:'LAW, SAFETY & CRIME', fmt:fmtNum, tags:['Fire'], colorType:'alert'},
+
+      // STATE SNAPSHOT
+      {id:'mh_gdp',          label:'Maharashtra GDP',           unit:'',   start: 4.3e7,  perSec:  128,   cat:'STATE SNAPSHOT', fmt:fmtRs, tags:['State'], colorType:'good'},
+      {id:'up_population',   label:'UP Population',             unit:'',   start: 240e6,  perSec:  0.28,  cat:'STATE SNAPSHOT', fmt:fmtNum, tags:['People'], colorType:'neutral'},
+      {id:'gj_growth',       label:'Gujarat Growth Rate',       unit:'%',  start: 8.2,    perSec:  0.00005, cat:'STATE SNAPSHOT', fmt:fmtPct, tags:['Economy'], colorType:'good'},
+      {id:'ka_it_exports',   label:'Karnataka IT Exports',      unit:'',   start: 2.4e6,  perSec:  18,    cat:'STATE SNAPSHOT', fmt:fmtRs, tags:['Tech'], colorType:'good'},
+      {id:'tn_manufacturing',label:'Tamil Nadu Manufacturing',  unit:'',   start: 1.8e6,  perSec:  12,    cat:'STATE SNAPSHOT', fmt:fmtRs, tags:['Industry'], colorType:'good'},
+      {id:'wb_fish_prod',    label:'West Bengal Fish Production',unit:'MT',start: 1.8e6,  perSec:  0.5,   cat:'STATE SNAPSHOT', fmt:fmtNum, tags:['Fishery'], colorType:'neutral'},
+      {id:'rj_solar',        label:'Rajasthan Solar Power',     unit:'MW', start: 18e3,   perSec:  2.1,   cat:'STATE SNAPSHOT', fmt:fmtNum, tags:['Energy'], colorType:'good'},
+      {id:'pb_agriculture',  label:'Punjab Agriculture Output', unit:'MT', start: 32e6,   perSec:  1.2,   cat:'STATE SNAPSHOT', fmt:fmtNum, tags:['Farm'], colorType:'good'},
+    ];
+
+    // Build panels under each category header in organized rows
+    const grid = document.getElementById('grid');
+    
+    // Map categories to their section containers
+    const sectionMapping = {
+      'ECONOMY & BUDGET': 'economy-section',
+      'POPULATION & DEMOGRAPHICS': 'population-section', 
+      'JOBS & INCOME': 'jobs-section',
+      'FOOD, RESOURCES & RATION': 'resources-section',
+      'HEALTH & WELFARE': 'health-section',
+      'EDUCATION': 'education-section',
+      'INFRASTRUCTURE & DEVELOPMENT': 'infrastructure-section',
+      'ENVIRONMENT & CLIMATE': 'environment-section',
+      'LAW, SAFETY & CRIME': 'safety-section',
+      'STATE SNAPSHOT': 'state-section'
+    };
+
+    // Find the section container for a category
+    function findSectionContainer(catName) {
+      const sectionId = sectionMapping[catName];
+      return sectionId ? document.getElementById(sectionId) : null;
+    }
+
+    // Generate panel HTML for a metric
+    function buildPanel(metric) {
+      const tags = metric.tags.map(t => `<span class="tag">${t}</span>`).join('');
+      return `
+        <div class="panel" id="panel-${metric.id}">
+          <h3>${metric.label}</h3>
+          <div class="value">
+            <div class="num" id="val-${metric.id}">0</div>
+            <div class="unit">${metric.unit}</div>
+            <div class="delta" id="delta-${metric.id}">+0/sec</div>
+          </div>
+          <div class="tagbar">${tags}</div>
+        </div>
+      `;
+    }
+
+    // Insert panels into their respective section containers
+    METRICS.forEach(metric => {
+      const sectionEl = findSectionContainer(metric.cat.replace(' (Sample)', ''));
+      if (sectionEl) {
+        sectionEl.insertAdjacentHTML('beforeend', buildPanel(metric));
+      }
+    });
+
+    // Animation system
+    let running = true;
+    let speedMultiplier = 1.0;
+    let lastTime = Date.now();
+    const values = {}; // Current values for each metric
+    const originalValues = {}; // Store original values for reset
+
+    // Initialize values
+    METRICS.forEach(metric => {
+      values[metric.id] = metric.start;
+      originalValues[metric.id] = metric.start;
+    });
+
+    // Real-time clock function
+    function updateDateTime() {
+      const now = new Date();
+      const options = {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZone: 'Asia/Kolkata'
+      };
+      const formatted = now.toLocaleDateString('en-IN', options) + ' IST';
+      const datetimeEl = document.getElementById('datetime');
+      if (datetimeEl) {
+        datetimeEl.textContent = formatted;
+      }
+    }
+
+    // Update datetime every second
+    setInterval(updateDateTime, 1000);
+    updateDateTime(); // Initial call
+
+    // Server room ambient audio - continuous buzzing/humming sound
+    let buzzContext;
+    let buzzOscillator;
+    let buzzGainNode;
+    let isBuzzPlaying = false;
+    let isBuzzEnabled = true;
+
+    function createServerBuzz() {
+      if (!isBuzzEnabled) return;
+      
+      try {
+        buzzContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create oscillator for base hum
+        buzzOscillator = buzzContext.createOscillator();
+        buzzGainNode = buzzContext.createGain();
+        
+        // Low frequency hum like server fans/electrical buzz
+        buzzOscillator.frequency.setValueAtTime(60, buzzContext.currentTime); // 60Hz electrical hum
+        buzzOscillator.type = 'sawtooth'; // Rich harmonic content for realistic buzz
+        
+        // Very low volume for background ambience
+        buzzGainNode.gain.setValueAtTime(0.03, buzzContext.currentTime);
+        
+        // Connect nodes
+        buzzOscillator.connect(buzzGainNode);
+        buzzGainNode.connect(buzzContext.destination);
+        
+        // Start the buzz
+        buzzOscillator.start();
+        isBuzzPlaying = true;
+        
+        // Add slight frequency modulation for realism
+        setInterval(() => {
+          if (isBuzzPlaying && buzzOscillator && isBuzzEnabled) {
+            const variation = 58 + Math.random() * 4; // 58-62 Hz variation
+            buzzOscillator.frequency.setValueAtTime(variation, buzzContext.currentTime);
+          }
+        }, 2000);
+        
+      } catch (e) {
+        console.log('Audio not supported in this browser');
+      }
+    }
+
+    function stopServerBuzz() {
+      if (buzzOscillator) {
+        buzzOscillator.stop();
+        buzzOscillator = null;
+      }
+      isBuzzPlaying = false;
+    }
+
+    function toggleServerBuzz() {
+      isBuzzEnabled = !isBuzzEnabled;
+      
+      if (isBuzzEnabled && !isBuzzPlaying) {
+        createServerBuzz();
+        audioToggleBtn.textContent = '🔊 Audio';
+      } else if (!isBuzzEnabled && isBuzzPlaying) {
+        stopServerBuzz();
+        audioToggleBtn.textContent = '🔇 Muted';
+      }
+    }
+
+    // Start audio on user interaction (required by browsers)
+    function startInitialAudio() {
+      if (!isBuzzPlaying && isBuzzEnabled) {
+        createServerBuzz();
+      }
+    }
+
+    function updateDisplay() {
+      METRICS.forEach(metric => {
+        const valEl = document.getElementById(`val-${metric.id}`);
+        const deltaEl = document.getElementById(`delta-${metric.id}`);
+        
+        if (valEl) {
+          valEl.textContent = metric.fmt(values[metric.id]);
+          // Apply color coding based on metric type
+          valEl.className = `num ${metric.colorType || 'neutral'}`;
+        }
+        
+        if (deltaEl && metric.perSec !== 0) {
+          const rate = metric.perSec * speedMultiplier;
+          const sign = rate >= 0 ? '+' : '';
+          deltaEl.textContent = `${sign}${Math.abs(rate) < 1 ? rate.toFixed(2) : Math.round(rate)}/s`;
+        }
+      });
+    }
+
+    function animate() {
+      if (running) {
+        const now = Date.now();
+        const dt = (now - lastTime) / 1000; // delta time in seconds
+        
+        METRICS.forEach(metric => {
+          if (metric.perSec !== 0) {
+            values[metric.id] += metric.perSec * speedMultiplier * dt;
+            // Prevent negative values for most metrics (except those that can be negative)
+            if (values[metric.id] < 0 && !['deficit', 'unemployed'].includes(metric.id)) {
+              values[metric.id] = 0;
+            }
+          }
+        });
+        
+        updateDisplay();
+        lastTime = now;
+      }
+      
+      requestAnimationFrame(animate);
+    }
+
+    // Control handlers
+    const toggleBtn = document.getElementById('toggle');
+    const speedSlider = document.getElementById('speed');
+    const resetBtn = document.getElementById('reset');
+    const audioToggleBtn = document.getElementById('audio-toggle');
+
+    toggleBtn.addEventListener('click', () => {
+      running = !running;
+      toggleBtn.textContent = running ? '⏸ Pause' : '▶ Play';
+      if (running) {
+        lastTime = Date.now(); // Reset timing when resuming
+      }
+    });
+
+    speedSlider.addEventListener('input', (e) => {
+      speedMultiplier = parseFloat(e.target.value) / 100;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      METRICS.forEach(metric => {
+        values[metric.id] = originalValues[metric.id];
+      });
+      updateDisplay();
+      lastTime = Date.now();
+    });
+
+    audioToggleBtn.addEventListener('click', () => {
+      toggleServerBuzz();
+    });
+
+    // Auto-start server buzz on first interaction
+    document.addEventListener('click', startInitialAudio, { once: true });
+    document.addEventListener('keydown', startInitialAudio, { once: true });
+
+    // Reset daily counters at midnight (simulated)
+    function resetDailyCounters() {
+      const dailyMetrics = ['births_today', 'deaths_today', 'vacc_today', 'crime_today', 'road_acc', 'subsidy_food', 'roads_km', 'rail_km'];
+      dailyMetrics.forEach(id => {
+        if (values[id] !== undefined) {
+          values[id] = 0;
+          originalValues[id] = 0;
+        }
+      });
+    }
+
+    // Simulate daily reset every 2 minutes for demo purposes
+    setInterval(resetDailyCounters, 120000);
+
+    // Audio Context for sound effects
+    let audioContext;
+    let isAudioEnabled = false;
+
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        isAudioEnabled = true;
+      }
+    }
+
+    // Create coin counting sound effect
+    function playCountingSound() {
+      if (!isAudioEnabled || !audioContext) return;
+      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Coin-like metallic sound
+      oscillator.frequency.setValueAtTime(800 + Math.random() * 400, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    }
+
+    // Play sound on significant value changes
+    let soundCounter = 0;
+    function checkForSoundTrigger() {
+      soundCounter++;
+      if (soundCounter % 30 === 0 && running) { // Play sound every 30 updates
+        playCountingSound();
+      }
+    }
+
+    // Enable audio on first user interaction
+    document.addEventListener('click', initAudio, { once: true });
+    document.addEventListener('keydown', initAudio, { once: true });
+
+    // Initialize display and start animation
+    updateDisplay();
+    lastTime = Date.now();
+    animate();
+
+    // Add some visual flair with periodic glow effects
+    setInterval(() => {
+      const panels = document.querySelectorAll('.panel');
+      const randomPanel = panels[Math.floor(Math.random() * panels.length)];
+      if (randomPanel) {
+        randomPanel.style.boxShadow = 'var(--shadow), 0 0 20px rgba(57,255,20,.5)';
+        setTimeout(() => {
+          randomPanel.style.boxShadow = 'var(--shadow)';
+        }, 1000);
+      }
+      checkForSoundTrigger();
+    }, 3000);
+  </script>
+</body>
+</html>
