@@ -5,7 +5,7 @@ A GitHub Pages-hosted static website displaying India's live budget and societal
 ## ✨ Features
 
 ### 🎨 Styling
-- **Neon Hacker Aesthetic**: Dark theme with cyberpunk-inspired design
+- **Dark theme with cyberpunk-inspired design
 - **Dynamic Color Scheme**: Neon green, cyan, and magenta glowing effects
 - **Retro Typography**: Share Tech Mono monospace font for authentic hacker feel
 - **Visual Effects**: Scanline overlays, glowing text shadows, and subtle gradients
