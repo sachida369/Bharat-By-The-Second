@@ -1,4 +1,4 @@
-# 🇮🇳 India Live Budget • Neon Hacker Clock
+# 🇮🇳 Bharat By The Second – emphasizes real-time updates.
 
 A GitHub Pages-hosted static website displaying India's live budget and societal metrics with a cyberpunk neon hacker aesthetic and real-time animated counters.
 
